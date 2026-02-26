@@ -5,30 +5,15 @@ import Link from "next/link";
 
 export default function BlogPage() {
   const [isVisible, setIsVisible] = useState(false);
-  const [page, setPage] = useState(1);
-  const [cardsPerPage, setCardsPerPage] = useState(6);
 
   useEffect(() => {
     setIsVisible(true);
-
-    const handleResize = () => {
-      if (window.innerWidth < 480) setCardsPerPage(2);
-      else if (window.innerWidth < 1024) setCardsPerPage(4);
-      else setCardsPerPage(6);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Example blog posts
   const posts = [
-    { id: 1, slug: "sim-security", title: "Understanding SIM Security" },
+    { id: 1, slug: "sim-security", title: "Root of Your Digital Identity" },
   ];
-
-  const totalPages = Math.ceil(posts.length / cardsPerPage);
-  const paginatedPosts = posts.slice((page - 1) * cardsPerPage, page * cardsPerPage);
 
   return (
     <section className="w-full flex flex-col items-center bg-[#1d1d1d] text-white px-4 sm:px-6 lg:px-8 pt-20 pb-10">
@@ -39,7 +24,7 @@ export default function BlogPage() {
   }`}
 >
   <ul className="divide-y divide-gray-700">
-    {paginatedPosts.map((post) => (
+    {posts.map((post) => (
       <li key={post.id} className="py-6">
         <Link
           href={`/blog/${post.slug}`}

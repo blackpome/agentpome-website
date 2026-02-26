@@ -9,7 +9,7 @@ import { use } from "react";
 const posts = [
   {
     slug: "sim-security",
-    title: "Understanding SIM Security",
+    title: "Root of Your Digital Identity",
     excerpt: "Why your SIM card is the most critical part of your digital identity and how to protect it.",
     content: `# Your SIM Card Is the Root of Your Digital Identity
 
