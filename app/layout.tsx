@@ -12,7 +12,7 @@ const publicSans = Public_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "AgentPome - Cybersecurity | Penetration Testing & SOC Services",
+    default: "AgentPome - Personal Cybersecurity",
     template: "%s | AgentPome",
   },
   description: "A CyberSecurity startup specializing in penetration testing, SIEM implementation, and SOC services. Protect your business before it's too late. Expert security assessments and monitoring solutions.",
