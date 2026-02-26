@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
-import { useMemo, useState, use } from "react";
+import { use } from "react";
 
 // ✅ Blog data (server-side)
 const posts = [
@@ -88,8 +88,6 @@ Protect everything by protecting the one thing that connects it all.
     ogImage: "/og-default.png",
   }
 ];
-
-type BlogPost = typeof posts[number];
 
 // ✅ Metadata generation
 // export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
