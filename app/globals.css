@@ -49,6 +49,10 @@ body {
   overflow: hidden;
 }
 
+body:has(.kyr-layout) {
+  overflow: auto;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

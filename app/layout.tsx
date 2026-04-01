@@ -170,11 +170,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${publicSans.variable} antialiased`}>
-        <Navbar />
         <main className="flex flex-col min-h-screen bg-[#1d1d1d] text-white">
           {children}
         </main>
-        <NavigationMenu />
       </body>
     </html>
   );

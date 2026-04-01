@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import BlogPage from "./blog"; // replace with your actual component
 import Script from "next/script";
+import Navbar from "@/components/Navbar";
+import NavigationMenu from "@/components/NavigationMenu";
 
 export const metadata: Metadata = {
   title: "Blog",
