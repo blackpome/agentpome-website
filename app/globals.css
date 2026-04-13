@@ -53,6 +53,9 @@ body:has(.kyr-layout) {
   overflow: auto;
 }
 
+body:has(.admin-layout) {
+  overflow: auto;
+}
 @keyframes fadeIn {
   from {
     opacity: 0;

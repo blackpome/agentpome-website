@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AgentPome KYR — Admin Review Setup
 
-## Getting Started
+## What was built
 
-First, run the development server:
+A fully on-demand PDF review system. No storage anywhere — the PDF is
+regenerated from Sheets data every time you open a client's report.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+Client completes quiz
+  → /api/leads           saves answers to Google Sheets (fire-and-forget)
+
+Admin opens /admin/review
+  → password gate        (NEXT_PUBLIC_ADMIN_PASSWORD, sessionStorage)
+  → enters phone number
+  → GET /api/admin/lead  server proxy with secret token injection
+      → Apps Script      looks up row by phone, returns all fields
+  → POST /api/report     generates PDF from lead data on-demand
+      → iframe renders   inline in the browser
+      → Download button  triggers blob URL download
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## File placement
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| File                        | Place at                                    |
+|-----------------------------|---------------------------------------------|
+| `Code.gs`                   | Replace your existing Apps Script           |
+| `api-leads-route.ts`        | `app/api/leads/route.ts`                    |
+| `api-admin-lead-route.ts`   | `app/api/admin/lead/route.ts`               |
+| `api-report-route.ts`       | `app/api/report/route.ts`                   |
+| `admin-review-page.tsx`     | `app/admin/review/page.tsx`                 |
+| `env.local.template`        | Copy to `.env.local`, fill all values       |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Install dependency
 
-## Learn More
+```bash
+npm install pdfkit
+npm install -D @types/pdfkit
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Apps Script setup (one-time)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Open your Google Sheet → Extensions → Apps Script
+2. Paste `Code.gs` content, replacing everything
+3. Fill in at the top:
+   ```javascript
+   var SECRET_TOKEN = "your-SHEETS_WEBHOOK_SECRET-value";
+   var ADMIN_TOKEN  = "your-ADMIN_REVIEW_TOKEN-value";
+   ```
+4. Run → `setupHeaders`  (creates styled header row)
+5. Deploy → New deployment → Web App
+   - Execute as: **Me**
+   - Who has access: **Anyone**
+6. Copy the Web App URL → paste as `GOOGLE_SHEETS_WEBHOOK_URL` in `.env.local`
+7. **Redeploy** (new version) every time you update Code.gs
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Security model
 
-## Deploy on Vercel
+| Layer              | What it protects                          | Secret                          |
+|--------------------|-------------------------------------------|---------------------------------|
+| Password gate      | /admin/review UI                         | NEXT_PUBLIC_ADMIN_PASSWORD      |
+| x-admin-key header | /api/admin/lead + /api/report endpoints  | NEXT_PUBLIC_ADMIN_API_KEY       |
+| Apps Script token  | Direct GET to your Sheet webhook         | ADMIN_REVIEW_TOKEN              |
+| POST secret        | Fake leads being written to Sheets       | SHEETS_WEBHOOK_SECRET           |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+For production, consider replacing the client-side password gate with
+Next.js middleware + httpOnly cookie session (e.g. next-auth or iron-session).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Why no Drive/storage?
+
+- PDF is fully deterministic from Sheets data
+- Regeneration takes ~300–500ms (PDFKit is fast)
+- No storage quota, no broken links, no cleanup needed
+- Scales to any volume without degradation

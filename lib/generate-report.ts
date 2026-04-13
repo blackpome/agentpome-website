@@ -94,7 +94,7 @@ function txt(
   let v = s;
   if (maxW) {
     while (v.length > 2 && font.widthOfTextAtSize(v, size) > maxW) v = v.slice(0, -1);
-    if (v !== s) v = v.slice(0, -1) + "…";
+    if (v !== s) v = v.slice(0, -1) + "...";
   }
   p.drawText(v, { x, y, size, font, color });
 }
@@ -109,6 +109,47 @@ function txtC(p: PDFPage, s: string, cx: number, y: number, size: number, font: 
 
 function sLabel(p: PDFPage, s: string, y: number, bold: PDFFont) {
   txt(p, s, 36, y, 6.5, bold, C.w50);
+}
+
+
+// ─── Text sanitiser ────────────────────────────────────────────────────────────
+// pdf-lib StandardFonts use WinAnsi (Latin-1) encoding.
+// Any char outside that range throws "WinAnsi cannot encode".
+// Map the common offenders to safe ASCII equivalents, then strip the rest.
+
+const CHAR_MAP: Record<string, string> = {
+  "→": "->",   // →
+  "←": "<-",  // ←
+  "•": "-",   // •
+  "–": "-",   // en dash
+  "—": "--",  // em dash
+  "‘": "'",   // left single quote
+  "’": "'",   // right single quote
+  "“": '"',   // left double quote
+  "”": '"',   // right double quote
+  "₹": "Rs.", // ₹  (rupee sign)
+  "…": "...", // …
+  "·": ".",   // middle dot ·
+  "×": "x",   // ×
+  "é": "e",   // é
+  "à": "a",   // à
+  "è": "e",   // è
+};
+
+function san(input: string): string {
+  if (!input) return "";
+  let out = "";
+  for (const ch of input) {
+    if (CHAR_MAP[ch]) {
+      out += CHAR_MAP[ch];
+    } else if (ch.charCodeAt(0) > 255) {
+      // Drop anything else outside Latin-1
+      out += "?";
+    } else {
+      out += ch;
+    }
+  }
+  return out;
 }
 
 // ─── Generator ────────────────────────────────────────────────────────────────
@@ -135,7 +176,7 @@ export async function generateReport(data: ReportData): Promise<Uint8Array> {
 
   // Row 2 — Name (size 26, baseline 761) + Score (size 44, baseline 748)
   //          Both have cap-top = 780, so they appear visually top-aligned.
-  txt(page, data.name, PAD, 761, 26, bold, C.white);
+  txt(page, san(data.name), PAD, 761, 26, bold, C.white);
 
   const scoreStr = String(data.score10);
   const scoreW   = bold.widthOfTextAtSize(scoreStr, 44);
@@ -147,7 +188,7 @@ export async function generateReport(data: ReportData): Promise<Uint8Array> {
   // Row 3 — subtitle (phone + email) + risk badge  (y=735)
   const sub = [data.phone ? `+91 ${data.phone}` : "", data.email ?? ""]
     .filter(Boolean).join("   ·   ");
-  txt(page, sub, PAD, 735, 8.5, reg, C.w50);
+  txt(page, san(sub), PAD, 735, 8.5, reg, C.w50);
 
   const rColor   = RISK_CLR[data.riskLevel];
   const badgeTxt = data.riskLevel.toUpperCase();
@@ -191,7 +232,7 @@ export async function generateReport(data: ReportData): Promise<Uint8Array> {
     y -= 14;
     for (const item of data.doingRight.slice(0, 4)) {
       circle(page, PAD + 5, y - 1, 3, C.green);
-      txt(page, item, PAD + 16, y - 4, 8.5, reg, C.w70, CW - 24);
+      txt(page, san(item), PAD + 16, y - 4, 8.5, reg, C.w70, CW - 24);
       y -= 14;
     }
     y -= 6;
@@ -205,7 +246,7 @@ export async function generateReport(data: ReportData): Promise<Uint8Array> {
     y -= 14;
     for (const item of data.riskAreas.slice(0, 5)) {
       circle(page, PAD + 5, y - 1, 3, C.red);
-      txt(page, item, PAD + 16, y - 4, 8.5, reg, C.w70, CW - 24);
+      txt(page, san(item), PAD + 16, y - 4, 8.5, reg, C.w70, CW - 24);
       y -= 14;
     }
     y -= 6;
@@ -220,7 +261,7 @@ export async function generateReport(data: ReportData): Promise<Uint8Array> {
     data.actions.slice(0, 5).forEach((action, i) => {
       fillRect(page, PAD, y - 17, 20, 19, C.srf2);
       txtC(page, String(i + 1), PAD + 10, y - 11, 8, bold, C.w70);
-      txt(page, action, PAD + 26, y - 11, 8.5, reg, C.w70, CW - 32);
+      txt(page, san(action), PAD + 26, y - 11, 8.5, reg, C.w70, CW - 32);
       y -= 23;
     });
     y -= 4;

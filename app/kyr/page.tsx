@@ -492,13 +492,15 @@ export default function KYRPage() {
       if (!res.ok) throw new Error("Report generation failed");
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href     = url;
-      a.download = `AgentPome_Risk_Report_${userInfo.name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf`;
+      const a      = document.createElement("a");
+      a.href       = url;
+      a.download   = `AgentPome_Risk_Report_${userInfo.name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf`;
+      a.style.display = "none";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Don't revoke the URL - let browser handle cleanup
+      // If user wants to start new assessment, they can reload the page
     } catch (e) {
       console.error("Download failed:", e);
     } finally {
@@ -508,7 +510,7 @@ export default function KYRPage() {
 
   // WhatsApp message carries score + risk level but NO plan name or price
   function handleWhatsApp() {
-    const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919876543210";
+    const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "918270094307";
     const isLow  = totalScore < 25;
     const msg    = isLow
       ? encodeURIComponent(
